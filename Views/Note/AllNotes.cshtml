@@ -1,0 +1,294 @@
+﻿@model IEnumerable<NotemakingApplication.Models.Note>
+
+@{
+    ViewBag.Title = "Home Page";
+}
+<div class="container">
+    <div class="split-left left">
+        <div class="main-header">
+            <h2 ><b>Dummy Notes</b></h2>
+            <form class="example">
+                <input type="text" placeholder="Search.." name="search">
+                <button type="submit"><i class="fa fa-search"></i></button>
+                
+            </form>
+        </div>
+        <div class="main-notes-container">
+
+            @foreach(var item in Model)
+            {
+                <div class="note">
+                    <div class="note-header dropdown">
+                        <div class="row">
+                            <div class="col-md-10">
+                                <p style="padding-top:3px;padding-left:5px;">@item.Title</p>
+                            </div>
+                            <div class="col-md-1">
+                                <a href="#" class="dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                   
+                                </a>
+                                <div class="dropdown-menu aria-labelledby="dropdownMenuButton">
+                                    <a href="#" class="dropdown-item" onclick="updateNote('@item.Id','View')">View</a>
+                                    <a href="#" class="dropdown-item" onclick="updateNote('@item.Id','Delete')">Delete</a>
+                               
+                                </div>
+                            </div>
+
+                        </div>
+                       
+                        
+                    </div>
+                    <div class="note-description show-read-more">
+                       @item.Description
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <div class="split-right right">
+        <div class="centered" id="createNoteSection" style="display:block">
+            
+           <img src="~/Content/Images/note.png" alt="Avatar man"  onclick="createNewNote(this)">
+      
+            <a href="#" onclick="createNewNote(this)">
+                <h2>Click to create a new note</h2>
+            </a>  
+        </div>
+
+        <div class="editor-container" id="noteEditor" style="display:none">
+            @*   <div class="editor-header">
+                    <div class="row">
+                        <div class="col-md-8">
+                            Okay This is the test message
+                        </div>
+                        <div class="col-md-4">
+                            <div class="row">
+                                <div class="col-md-1" style="background-color:green"></div>
+                                <div class="col-md-1" style="background-color:yellow"></div>
+                                <div class="col-md-1" style="background-color:orange"></div>
+                                <div class="col-md-1" style="background-color:red"></div>
+                                <div class="col-md-1"></div>
+                                <div class="col-md-1"></div>
+                                <div class="col-md-1"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>*@
+            
+           
+            <div class="editor-content">
+                <button class="btn btn-default deleteBtn" title="Delete"  style="display:none" button" id="delete" onclick="ActionOnNote('delete')" style="float:right;padding:10px">
+                    <i class="fa fa-trash"></i>
+                </button>
+
+                <div class="row" style="margin-left:5px;margin-top:10px;">
+                    <label for="title" style="margin-top:6px;">Title:</label>
+                    <input class="form-control titleInput" placeholder="Your Title" id="noteTitle" style=": none" />
+                </div>
+                <div class="row" style="margin-left:5px;margin-top:10px;">
+                    <label for="description">Description:</label>
+                    <textarea placeholder="Start.." cols="60" rows="15" id="noteContent"></textarea>
+                </div>
+
+                <div class="row actionBtn" style="margin-left:5px;padding:10px">
+                    <button class="btn btn-default deleteBtn" style="margin-left:5px;" title="Cancel" type="button" id="cancel" onclick="ActionOnNote('cancel')">Cancel</button>
+                    <button class="btn btn-success deleteBtn" style="margin-left:5px;" title="Save" type="button" id="save" onclick="ActionOnNote('save')">Save</button>
+                    
+
+                    <button class="btn btn-success deleteBtn" style="display:none" Update" type="button" id="update" onclick="ActionOnNote('update')">Update</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var update = false;
+    var selectedItemId = 0;
+
+    function updateListOfNotes() {
+        var getAllNotesRequest = "/";  
+        $.ajax({
+            type: "GET",
+            url: getAllNotesRequest,
+            contentType: "application/json; charset=utf-8"
+        }).done((data) => {
+            alert("List Data Updated");
+        });
+    }
+
+    function updateNote(id,action) {
+      
+        if (action == 'View') {
+            // get Note by Id  and display in the section
+            var getNoteById = "notebyid?id=" + id;
+            $.ajax({
+                type: "GET",
+                url: getNoteById,
+                contentType: "application/json; charset=utf-8"
+            }).done((data) => {
+
+                var x = document.getElementById("createNoteSection");
+                var editor = document.getElementById("noteEditor");
+
+                var save = document.getElementById("save");
+                var update = document.getElementById("update");
+
+                var deletenbtn = document.getElementById("delete");
+
+                save.style.display = "none";
+                update.style.display = "block";
+                deletenbtn.style.display = "block";
+
+                x.style.display = "none";
+                editor.style.display = "block";
+
+                var title = document.getElementById("noteTitle");
+                var description = document.getElementById("noteContent");
+
+                title.value = data[0]["Title"];
+                description.value = data[0]["Description"];
+                selectedItemId = data[0]["Id"];
+               
+                console.log("Data Received");
+            });
+        } else if (action == 'Delete') {
+            // get Note by Id  and display in the section
+            var getNoteById = "delete?id=" + id;
+            $.ajax({
+                type: "GET",
+                url: getNoteById,
+                contentType: "application/json; charset=utf-8"
+            }).done((data) => {
+              
+                updateListOfNotes();
+                console.log("Data Received" + data);
+            });
+        }
+    }
+
+    function ActionOnNote(action) {
+        if (action == 'cancel') {
+            var x = document.getElementById("createNoteSection");
+            var editor = document.getElementById("noteEditor");
+
+            x.style.display = "block";
+            editor.style.display = "none";
+        } else
+            if (action == 'save') {
+                var title = document.getElementById("noteTitle").value;
+                var description = document.getElementById("noteContent").value;
+
+                if (title.length > 0 && description.length > 0) {
+                    var myRequest = "create";
+
+                    var data = JSON.stringify({
+                        "Id": null,
+                        "Title": title,
+                        "Description": description,
+                        "GroupId": 0,
+                        "Tag": "General"
+
+                    });
+
+
+                    // get list of ATM coordinats for that particular bank
+                    $.ajax({
+                        type: "POST",
+                        url: myRequest,
+                        contentType: "application/json; charset=utf-8",
+                        data: data
+                    }).done((data) => {
+                       
+                        updateListOfNotes();
+                    });
+                } else {
+                    alert("Title or Description cannot be empty");
+                }
+            }
+            else if (action == 'update') {
+                var title = document.getElementById("noteTitle").value;
+                var description = document.getElementById("noteContent").value;
+
+                if (title.length > 0 && description.length > 0) {
+                    var myRequest = "update";
+
+                    var data = JSON.stringify({
+                        "Id": selectedItemId,
+                        "Title": title,
+                        "Description": description,
+                        "GroupId": 0,
+                        "Tag": "General"
+
+                    });
+
+
+                    // get list of ATM coordinats for that particular bank
+                    $.ajax({
+                        type: "POST",
+                        url: myRequest,
+                        contentType: "application/json; charset=utf-8",
+                        data: data
+                    }).done((data) => {
+                       
+                        updateListOfNotes();
+                    });
+                } else {
+                    alert("Title or Description cannot be empty");
+                }
+            } else if (action == 'delete') {
+                // get Note by Id  and display in the section
+                var getNoteById = "delete?id=" + selectedItemId;
+                $.ajax({
+                    type: "GET",
+                    url: getNoteById,
+                    contentType: "application/json; charset=utf-8"
+                }).done((data) => {
+                   
+                    updateListOfNotes();
+                    console.log("Data Received" + data);
+                });
+            }
+    }
+
+ 
+    function createNewNote() {
+        var x = document.getElementById("createNoteSection");
+        var editor = document.getElementById("noteEditor");
+
+        x.style.display = "none";
+        editor.style.display = "block";
+    }
+
+    function ItemClick(itemNumber) {
+        alert("I have clicked Item" + itemNumber);
+    }
+
+    $(document).reaModely(function () {
+
+        $('.deleteBtn').tooltip();   
+
+        var maxLength = 300;
+        $(".show-read-more").each(function () {
+            var myStr = $(this).text();
+            if ($.trim(myStr).length > maxLength) {
+                var newStr = myStr.substring(0, maxLength);
+                var removedStr = myStr.substring(maxLength, $.trim(myStr).length);
+                $(this).empty().html(newStr);
+                $(this).append(' <a href="javascript:void(0);" class="read-more">read more...</a>');
+                $(this).append('<span class="more-text">' + removedStr + '</span>');
+            }
+        });
+
+        $(".read-more").click(function () {
+            alert("You have click item number:");
+        });
+    });
+</script>
+
+
+
